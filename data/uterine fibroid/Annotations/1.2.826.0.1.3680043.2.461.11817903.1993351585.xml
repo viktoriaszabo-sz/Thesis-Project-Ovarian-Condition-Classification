@@ -1,0 +1,26 @@
+<annotation>
+	<folder>余香美</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11817903.1993351585.jpg</filename>
+	<path>C:\Users\LoTvT\Desktop\肌瘤\余香美\1.2.826.0.1.3680043.2.461.11817903.1993351585.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>307</xmin>
+			<ymin>206</ymin>
+			<xmax>701</xmax>
+			<ymax>482</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,0 +1,26 @@
+<annotation>
+	<folder>黄慧芬</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11670081.1054763330.jpg</filename>
+	<path>D:\肌瘤\黄慧芬\1.2.826.0.1.3680043.2.461.11670081.1054763330.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>442</xmin>
+			<ymin>218</ymin>
+			<xmax>499</xmax>
+			<ymax>251</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,0 +1,26 @@
+<annotation>
+	<folder>林淑娟</folder>
+	<filename>1.2.826.0.1.3680043.2.461.12104613.2267339827.jpg</filename>
+	<path>E:\截图\林淑娟\1.2.826.0.1.3680043.2.461.12104613.2267339827.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>1</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>607</xmin>
+			<ymin>254</ymin>
+			<xmax>692</xmax>
+			<ymax>293</ymax>
+		</bndbox>
+	</object>
+</annotation>

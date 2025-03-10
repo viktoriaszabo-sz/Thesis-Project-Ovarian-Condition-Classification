@@ -1,0 +1,26 @@
+<annotation>
+	<folder>蔡少苹2</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11838086.4154856450.jpg</filename>
+	<path>D:\肌瘤\蔡少苹2\1.2.826.0.1.3680043.2.461.11838086.4154856450.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>1</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>324</xmin>
+			<ymin>324</ymin>
+			<xmax>703</xmax>
+			<ymax>615</ymax>
+		</bndbox>
+	</object>
+</annotation>

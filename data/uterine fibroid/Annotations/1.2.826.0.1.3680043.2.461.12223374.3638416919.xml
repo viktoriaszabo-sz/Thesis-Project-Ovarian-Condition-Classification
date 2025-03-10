@@ -1,0 +1,26 @@
+<annotation>
+	<folder>赵丽</folder>
+	<filename>1.2.826.0.1.3680043.2.461.12223374.3638416919.jpg</filename>
+	<path>D:\吴\吴\赵丽\1.2.826.0.1.3680043.2.461.12223374.3638416919.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>1</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>409</xmin>
+			<ymin>175</ymin>
+			<xmax>582</xmax>
+			<ymax>354</ymax>
+		</bndbox>
+	</object>
+</annotation>

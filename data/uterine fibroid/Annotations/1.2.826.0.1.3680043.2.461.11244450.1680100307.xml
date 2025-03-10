@@ -1,0 +1,26 @@
+<annotation>
+	<folder>郑慧颖</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11244450.1680100307.jpg</filename>
+	<path>C:\Users\LoTvT\Desktop\肌瘤\郑慧颖\1.2.826.0.1.3680043.2.461.11244450.1680100307.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>376</xmin>
+			<ymin>271</ymin>
+			<xmax>531</xmax>
+			<ymax>437</ymax>
+		</bndbox>
+	</object>
+</annotation>

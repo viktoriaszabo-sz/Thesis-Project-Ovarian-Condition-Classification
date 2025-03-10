@@ -1,0 +1,26 @@
+<annotation>
+	<folder>程遐婷</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11588530.2415068743.jpg</filename>
+	<path>D:\肌瘤\程遐婷\1.2.826.0.1.3680043.2.461.11588530.2415068743.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>473</xmin>
+			<ymin>261</ymin>
+			<xmax>563</xmax>
+			<ymax>310</ymax>
+		</bndbox>
+	</object>
+</annotation>

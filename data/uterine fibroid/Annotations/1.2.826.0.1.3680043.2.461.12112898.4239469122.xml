@@ -1,0 +1,26 @@
+<annotation>
+	<folder>曾秀惠</folder>
+	<filename>1.2.826.0.1.3680043.2.461.12112898.4239469122.jpg</filename>
+	<path>E:\截图\曾秀惠\1.2.826.0.1.3680043.2.461.12112898.4239469122.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>1</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>480</xmin>
+			<ymin>447</ymin>
+			<xmax>563</xmax>
+			<ymax>547</ymax>
+		</bndbox>
+	</object>
+</annotation>

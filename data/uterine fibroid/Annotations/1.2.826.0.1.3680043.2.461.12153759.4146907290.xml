@@ -1,0 +1,26 @@
+<annotation>
+	<folder>姜向梅</folder>
+	<filename>1.2.826.0.1.3680043.2.461.12153759.4146907290.jpg</filename>
+	<path>E:\截图\姜向梅\1.2.826.0.1.3680043.2.461.12153759.4146907290.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>435</xmin>
+			<ymin>308</ymin>
+			<xmax>555</xmax>
+			<ymax>399</ymax>
+		</bndbox>
+	</object>
+</annotation>

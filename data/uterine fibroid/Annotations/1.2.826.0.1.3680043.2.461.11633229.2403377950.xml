@@ -1,0 +1,26 @@
+<annotation>
+	<folder>魏碎金</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11633229.2403377950.jpg</filename>
+	<path>C:\Users\LoTvT\Desktop\肌瘤\魏碎金\1.2.826.0.1.3680043.2.461.11633229.2403377950.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>443</xmin>
+			<ymin>300</ymin>
+			<xmax>596</xmax>
+			<ymax>400</ymax>
+		</bndbox>
+	</object>
+</annotation>

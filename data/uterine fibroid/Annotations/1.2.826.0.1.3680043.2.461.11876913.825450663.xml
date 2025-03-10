@@ -1,0 +1,26 @@
+<annotation>
+	<folder>柯来琴</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11876913.825450663.jpg</filename>
+	<path>E:\文献 数据\1\柯来琴\1.2.826.0.1.3680043.2.461.11876913.825450663.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>804</width>
+		<height>632</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>407</xmin>
+			<ymin>246</ymin>
+			<xmax>476</xmax>
+			<ymax>317</ymax>
+		</bndbox>
+	</object>
+</annotation>

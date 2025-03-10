@@ -1,0 +1,26 @@
+<annotation>
+	<folder>胡惠娥</folder>
+	<filename>1.2.826.0.1.3680043.2.461.12292780.1819468307.jpg</filename>
+	<path>E:\截图\胡惠娥\1.2.826.0.1.3680043.2.461.12292780.1819468307.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>1</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>449</xmin>
+			<ymin>365</ymin>
+			<xmax>487</xmax>
+			<ymax>404</ymax>
+		</bndbox>
+	</object>
+</annotation>

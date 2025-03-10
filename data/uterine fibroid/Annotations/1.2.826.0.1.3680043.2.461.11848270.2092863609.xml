@@ -1,0 +1,26 @@
+<annotation>
+	<folder>沈立英</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11848270.2092863609.jpg</filename>
+	<path>E:\文献 数据\1	林完成\沈立英\1.2.826.0.1.3680043.2.461.11848270.2092863609.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>1</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>551</xmin>
+			<ymin>446</ymin>
+			<xmax>628</xmax>
+			<ymax>509</ymax>
+		</bndbox>
+	</object>
+</annotation>

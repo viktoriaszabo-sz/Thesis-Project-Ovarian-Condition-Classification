@@ -1,0 +1,26 @@
+<annotation>
+	<folder>陈碧玲</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11688467.1733292510.jpg</filename>
+	<path>D:\肌瘤\陈碧玲\1.2.826.0.1.3680043.2.461.11688467.1733292510.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>441</xmin>
+			<ymin>444</ymin>
+			<xmax>525</xmax>
+			<ymax>503</ymax>
+		</bndbox>
+	</object>
+</annotation>

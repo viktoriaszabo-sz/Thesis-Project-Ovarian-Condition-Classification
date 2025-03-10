@@ -1,0 +1,26 @@
+<annotation>
+	<folder>彭玉珠</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11967447.2660952554.jpg</filename>
+	<path>E:\文献 数据\1	林完成\彭玉珠\1.2.826.0.1.3680043.2.461.11967447.2660952554.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>350</xmin>
+			<ymin>461</ymin>
+			<xmax>380</xmax>
+			<ymax>490</ymax>
+		</bndbox>
+	</object>
+</annotation>

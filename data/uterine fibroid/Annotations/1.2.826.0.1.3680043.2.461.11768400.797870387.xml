@@ -1,0 +1,26 @@
+<annotation>
+	<folder>洪秀辉</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11768400.797870387.jpg</filename>
+	<path>D:\肌瘤\洪秀辉\1.2.826.0.1.3680043.2.461.11768400.797870387.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>379</xmin>
+			<ymin>505</ymin>
+			<xmax>445</xmax>
+			<ymax>558</ymax>
+		</bndbox>
+	</object>
+</annotation>

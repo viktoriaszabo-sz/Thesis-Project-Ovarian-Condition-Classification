@@ -1,0 +1,26 @@
+<annotation>
+	<folder>曾细琴</folder>
+	<filename>1.2.826.0.1.3680043.2.461.11782792.2102445965.jpg</filename>
+	<path>D:\肌瘤\曾细琴\1.2.826.0.1.3680043.2.461.11782792.2102445965.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>417</xmin>
+			<ymin>258</ymin>
+			<xmax>494</xmax>
+			<ymax>319</ymax>
+		</bndbox>
+	</object>
+</annotation>

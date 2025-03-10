@@ -1,0 +1,26 @@
+<annotation>
+	<folder>林杰凤</folder>
+	<filename>1.2.826.0.1.3680043.2.461.12022640.520570095.jpg</filename>
+	<path>E:\截图\林杰凤\1.2.826.0.1.3680043.2.461.12022640.520570095.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>1024</width>
+		<height>768</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>肌瘤</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>452</xmin>
+			<ymin>203</ymin>
+			<xmax>598</xmax>
+			<ymax>370</ymax>
+		</bndbox>
+	</object>
+</annotation>
