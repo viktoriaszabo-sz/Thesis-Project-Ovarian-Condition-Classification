@@ -37,7 +37,7 @@ out_channels = 0
 #---------------------------------------------------------------------------------------------------
 #DATALOADING
 
-data = "./data/BreastUltraSound"
+data = "./data/BreastUltraSound2"
 # Define image transformations
 transform = transforms.Compose([transforms.Resize((32,32)),
                                      transforms.ToTensor(),
