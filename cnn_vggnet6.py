@@ -6,16 +6,16 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from PIL import Image
 
 """------------------------------------------------------------------------
 COMMENTS FOR THE CODE: 
-- rewrite the current FFNN into CNN
+- try to rewrtie this CNN into different types to see the difference 
 - test whether ReLU or sigmoid is better for activation function 
 - test how many filters (should increase to 64, 128, 526 bc it common for CNNs) 
 - num classes here is 3
 - might need to seperate the training from the final funcitoning prototype (so that when we feed in the final picture, its like an app interface)
     - and also we wouldnt have to train the model all the time 
-- how to implement pooling? (linear helyett pooling?)
 ------------------------------------------------------------------------"""
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #if GPU available, otherwise falls back to CPU
@@ -65,27 +65,28 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Fa
 
 #----------------------------------------------------------------------------------------------
 
-# Neural Network
+# Neural Network - vggnet-16
 class CNN(nn.Module): # this one is based on VGG-16 first to simplify the arcitecture at first (doubling in each layer) 
-    def __init__(self, num_classes, kernel_size=3, stride=1):
+    def __init__(self, num_classes):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels = 3, out_channels=32, kernel_size=kernel_size, stride=stride) #convolving = 30
+        self.conv1 = nn.Conv2d(in_channels = 3, out_channels=32, kernel_size=3, stride=1) #convolving = 30
                                                                             #need to look into the caluclation more when writing the actual thesis!!!
         self.relu1 = nn.ReLU() #activation function
-        self.pool1 = nn.MaxPool2d(kernel_size, stride=stride) # pooling = 28
+        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) # pooling = 15, stride = 2 is the common chocie for pooling in CNN
+                                                                        #stride = 1 would not reduce spatial size 
 
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=kernel_size, stride=stride) #convolving = 26
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1) #convolving = 13
         self.relu2 = nn.ReLU() #activation function
-        self.pool2 = nn.MaxPool2d(kernel_size, stride=stride) # pooling = 24
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2) # pooling = 6 kernel = 2 more efficient, bc it literally halves the spatial dimensions 
 
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=kernel_size, stride=stride) #convolving = 22
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1) #convolving = 4
         self.relu3 = nn.ReLU() #activation function
-        self.pool3 = nn.MaxPool2d(kernel_size, stride=stride) # pooling = 20
+        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2) # pooling = 2
 
         #i need to understand whats going on here: 
-        self.fc1 = nn.Linear(51200, 128) #(out_channel * final pooling * final pooling = 51200) 
+        self.fc1 = nn.Linear(512, 256) #(out_channel * final pooling * final pooling = 51200) 
         self.relu4 = nn.ReLU()
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc2 = nn.Linear(256, num_classes)
 
     def forward(self, x):   # and in here: 
         x = self.pool1(self.relu1(self.conv1(x)))
@@ -97,7 +98,7 @@ class CNN(nn.Module): # this one is based on VGG-16 first to simplify the arcite
         x = self.fc2(x)  
         return x
 
-model = CNN(num_classes, kernel_size, stride).to(device)
+model = CNN(num_classes).to(device)
 
 #----------------------------------------------------------------------------------------------
 
@@ -141,3 +142,21 @@ with torch.no_grad():
 
     acc = 100.0 * n_correct / n_samples
     print(f'Accuracy of the network on the test dataset: {acc:.2f}%')
+
+#--------------------------------------------------------------------------------------------------
+# Prediction / testing
+img_path = './data/BreastUltrasound2/malignant (1).png' 
+img = Image.open(img_path)
+img = transform(img).unsqueeze(0)
+img = img.to(device)
+
+with torch.no_grad():
+    pred = model(img)
+    pred_label = torch.argmax(pred)
+
+plt.figure()
+plt.title(f"Predicted Label: {'Malignant' if pred_label.item() == 1 else 'Benign' if pred_label.item() == 0 else 'Normal'}")
+plt.imshow(img.cpu().squeeze(), cmap="gray")
+plt.xticks([])
+plt.yticks([])
+plt.savefig(f"./prediction_of_image.png", dpi=300)
