@@ -32,36 +32,30 @@ num_epochs = 10  # Number of epochs
 batch_size = 32  # Batch size
 learning_rate = 0.001  # Learning rate
 out_channels = 0
+image_size = 128
 
 
 #---------------------------------------------------------------------------------------------------
 #DATALOADING
 
-data = "./data/BreastUltraSound2"
 # Define image transformations
-transform = transforms.Compose([transforms.Resize((32,32)),
-                                     transforms.ToTensor(),
-                                     transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-                                                          std=[0.2023, 0.1994, 0.2010])
-                                     ])
-# Load dataset using ImageFolder
-dataset = datasets.ImageFolder(root=data, transform=transform)
+transform = transforms.Compose([
+    transforms.Resize((image_size, image_size)),  
+    transforms.Grayscale(num_output_channels=1),  
+    transforms.ToTensor(),  
+    transforms.Normalize(mean=[0.5], std=[0.5])  
+])
 
-# Extract features (X) and labels (y)
-X = torch.stack([img[0] for img in dataset])  # Stack all images into a tensor batch
-y = torch.tensor(dataset.targets)  # Convert labels to tensor
+data_path = './data/BreastUltrasound2/'
+dataset = datasets.ImageFolder(root=data_path, transform=transform)
 
-# Train-test split (80% train, 20% test)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Split dataset into train (80%) and test (20%)
+# Split the dataset into training (80%) and testing (20%)
 train_size = int(0.8 * len(dataset))
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-
-# Create DataLoaders
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
-test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False) 
+test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
+
 
 #----------------------------------------------------------------------------------------------
 
@@ -69,7 +63,7 @@ test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=Fa
 class CNN(nn.Module): # this one is based on VGG-16 first to simplify the arcitecture at first (doubling in each layer) 
     def __init__(self, num_classes):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels = 3, out_channels=32, kernel_size=3, stride=1) #convolving = 30
+        self.conv1 = nn.Conv2d(in_channels = 1, out_channels=32, kernel_size=3, stride=1) #convolving = 30
                                                                             #need to look into the caluclation more when writing the actual thesis!!!
         self.relu1 = nn.ReLU() #activation function
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) # pooling = 15, stride = 2 is the common chocie for pooling in CNN
@@ -84,7 +78,7 @@ class CNN(nn.Module): # this one is based on VGG-16 first to simplify the arcite
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2) # pooling = 2
 
         #i need to understand whats going on here: 
-        self.fc1 = nn.Linear(512, 256) #(out_channel * final pooling * final pooling = 51200) 
+        self.fc1 = nn.Linear(25088, 256) #(out_channel * final pooling * final pooling = 51200) 
         self.relu4 = nn.ReLU()
         self.fc2 = nn.Linear(256, num_classes)
 
