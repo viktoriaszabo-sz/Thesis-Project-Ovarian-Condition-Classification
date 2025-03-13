@@ -29,7 +29,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #if GPU av
 kernel_size = 3
 stride = 1 #doesnt neccessarily needs to be defined, bc its 1 on default 
 #hidden_size = 1024  # it might not even be needed - Number of neurons in the hidden layers
-num_classes = 3  # Binary classification (normal/malignant/benign)
+num_classes = 3  # Binary classification (benign/malignant/normal)
 num_epochs = 15  # Number of epochs
 batch_size = 32  # Batch size
 out_channels = 0
@@ -176,7 +176,7 @@ with torch.no_grad():
     n_samples = 0
     for images, labels in test_loader:
         outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
+        _, predicted = torch.max(outputs, 1) #or torch.argmax
         n_samples += labels.size(0)
         n_correct += (predicted == labels).sum().item()
 
@@ -185,7 +185,7 @@ with torch.no_grad():
 
 #--------------------------------------------------------------------------------------------------
 # Prediction / testing
-img_path = './data/BreastUltrasound3/malignant (1).png' 
+img_path = './data/BreastUltrasound3/normal_test.png' 
 img = Image.open(img_path)
 img = transform(img).unsqueeze(0)
 img = img.to(device)
