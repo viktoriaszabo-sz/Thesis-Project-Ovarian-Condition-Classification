@@ -97,9 +97,9 @@ with torch.no_grad():
 # Prediction / testing - most of this part is just debugging 
 img_path = './data/ovary_diseases/clean_ovaries.jpg' 
 img = Image.open(img_path).convert("RGB")   #do i need RGB? 
-img = preprocess(img).unsqueeze(0).to(device)   #resnet50 pre-defined weight allow them to be between -2 and 2
+img = preprocess(img).unsqueeze(0).to(device)   
 
-print("test image nim/max: ", img.min(), img.max()) # debug - if between -1 and 1 - good / 0 and 1 if tensor
+print("test image nim/max: ", img.min(), img.max()) #resnet50 pre-defined weight allow them to be between -2 and 2
 
 
 with torch.no_grad():
