@@ -1,29 +1,16 @@
-"""-------------------------------------------------------------------------------------------------------
-STEPS OF THE CODE: 
-
-2) dataloading 
-4) training the model (? maybe retraining?)
-5) testing the model
-6) final prediction/testing with random image  
-
-- need to figure out some hypertuning methods, bc the loss is good, but doesnt classify correctly 
-- create some data visualization 
-----------------------------------------------------------------------------------------------------------"""
 import os
-import time
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 import torch
 import torch.nn as nn
 from torch.optim import lr_scheduler
 from torchvision import datasets, transforms 
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet50, ResNet50_Weights
 from torch.utils.data import DataLoader, random_split, Dataset
 import matplotlib.pyplot as plt
 from PIL import Image
 from collections import Counter
 import pandas as pd
-
 from bayes_opt import BayesianOptimization
 
 #-----------------------------------------------------------------------------------------------------------
@@ -31,57 +18,87 @@ from bayes_opt import BayesianOptimization
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #if GPU available, otherwise falls back to CPU - can be removed 
 
-image_size = 128
 batch_size = 64     #even if its 61, its beter to work with 2^n numbers  
 num_classes = 9
 lr = 0.05554
 step_size = 7
 epochs = 12
 dropout = 0.3282 #not in resnet by default but helps with normalization 
-#62.59% accuracy - 60.65 - 0.3282 - 12.23 - 0.05554
-#                 batch   dropout   epochs      lr
-
 #-----------------------------------------------------------------------------------------------------------
 #DATALOADING
-weights = ResNet18_Weights.IMAGENET1K_V1    #this will help us with a pre-built image transformation 
-preprocess = weights.transforms()
+weights = ResNet50_Weights.IMAGENET1K_V2    #this will help us with a pre-built image transformation - should have 80.86% accuracy
+#use transfer learning and pre-trained models
+model = resnet50(weights=weights).to(device) #u can set the weight urself if needed 
+
 data_folder = './data/ovary_diseases/images'
 csv_file = './data/ovary_diseases/_annotations1.csv'
-df = pd.read_csv(csv_file) #columns: filename, label
-
-df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)     # Shuffle the rows of the dataframe
-shuffled_csv_file = './data/ovary_diseases/_annotations1_shuffled.csv'      # maybe use StratifiedShuffleSplit? 
+df = pd.read_csv(csv_file)  # Columns: filename, label
+df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
+shuffled_csv_file = './data/ovary_diseases/_annotations1_shuffled.csv'   
 df_shuffled.to_csv(shuffled_csv_file, index=False)
 
-class ImageDataset(Dataset):        # retrieving the class labels from the csv file 
+class ImageDataset(Dataset):
     def __init__(self, csv_df, img_folder, transform=None):
         self.df = csv_df
         self.img_folder = img_folder
         self.transform = transform
-
-        # Create a mapping from class names to indices - so the model can work with it
         self.class_mapping = {name: idx for idx, name in enumerate(sorted(self.df['label'].unique()))}
 
     def __len__(self):
         return len(self.df)
-    
+
     def __getitem__(self, idx):
-        img_name = self.df.iloc[idx, 0]  # Get filename
-        label_name = self.df.iloc[idx, 1]  # Get class label
+        img_name = self.df.iloc[idx, 0]
+        label_name = self.df.iloc[idx, 1]
         img_path = os.path.join(self.img_folder, img_name)
-        image = Image.open(img_path).convert("RGB")  # Open image
+        image = Image.open(img_path).convert("RGB")  # Ensure RGB
+
         if self.transform:
             image = self.transform(image)
 
-        label = self.class_mapping[label_name]  # Convert label to number
-        return image, torch.tensor(label, dtype=torch.long)  # Ensure it's a tensor
-    
-dataset = ImageDataset(df_shuffled, data_folder, transform=preprocess)
-print(dataset.class_mapping)        #debug to see the classes 
-img, label = dataset[0]  # Get one sample
+        label = self.class_mapping[label_name]
+        return image, torch.tensor(label, dtype=torch.long)
 
-plt.imshow(img.permute(1, 2, 0).numpy())  # Convert (C, H, W) to (H, W, C) for visualization
-plt.title(f"Class: {label}")
+temp_transform = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor()  # No normalization yet
+])
+
+temp_dataset = ImageDataset(df_shuffled, data_folder, transform=temp_transform)
+loader = DataLoader(temp_dataset, batch_size=32, shuffle=False)
+
+# 4. Compute Mean and Std
+def compute_mean_std(loader):
+    mean = torch.zeros(3)
+    std = torch.zeros(3)
+    num_samples = 0
+
+    for images, _ in loader:
+        batch_samples = images.size(0)
+        images = images.view(batch_samples, 3, -1)  # Flatten images
+        mean += images.mean(2).sum(0)
+        std += images.std(2).sum(0)
+        num_samples += batch_samples
+
+    mean /= num_samples
+    std /= num_samples
+    return mean, std
+
+custom_mean, custom_std = compute_mean_std(loader)
+print(f"Custom Mean: {custom_mean}, Custom Std: {custom_std}")
+
+transform = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=custom_mean.tolist(), std=custom_std.tolist())  # Custom normalization
+])
+
+dataset = ImageDataset(df_shuffled, data_folder, transform=transform)
+print(dataset.class_mapping)  # Debug class mappings
+img, label = dataset[0]
+plt.imshow(img.permute(1, 2, 0).numpy())  # Convert (C, H, W) to (H, W, C)
 plt.show()              # this is to see how the image processing was done before feeding it into the network 
                         # based on this, tune the transformation 
 
@@ -94,8 +111,6 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 #-----------------------------------------------------------------------------------------
 #initialize model with corresponding weights - ResNet50 API 
 
-#use transfer learning and pre-trained models
-model = resnet18(weights=weights).to(device) #u can set the weight urself if needed 
 
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
     param.requires_grad = False
@@ -112,8 +127,8 @@ scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)  #mig
 # Hyperparameter optimization
 
 # Define an evaluation function for Bayesian Optimization
-def obj_function(dropout, lr, batch_size, epochs): #important to do it after the model is set to eval() mode 
-    batch_size = int(batch_size)  # Convert batch_size to int
+def obj_function(dropout, lr, epochs): #important to do it after the model is set to eval() mode 
+    #batch_size = int(batch_size)  # Convert batch_size to int
     epochs = int(epochs)  # Convert epochs to int
     # Define loss function and optimizer
     #criterion = nn.CrossEntropyLoss()
@@ -150,12 +165,13 @@ def obj_function(dropout, lr, batch_size, epochs): #important to do it after the
             n_samples += labels.size(0)                     #all samples
             n_correct += (predicted == labels).sum().item() #counts how many predictions were correct
     acc = 100.0 * n_correct / n_samples                 #accuracy score = correct prediciton / all samples 
+    print(acc)
     return acc 
 
-pbounds = {'dropout': (0.0, 0.499), 
-           'lr': (0.0, 0.1), #learning_rate - 0.1 might be too high, 0.001 is enough) 
-           'batch_size': (4, 64), 
-           'epochs': (10, 15),
+pbounds = {'dropout': (0.3, 0.499), 
+           'lr': (0.04, 0.1), #learning_rate - 0.1 might be too high, 0.001 is enough) 
+           #'batch_size': (4, 64), 
+           #'epochs': (10, 15),
            }
 
 bayes_optimizer = BayesianOptimization(
@@ -163,14 +179,15 @@ bayes_optimizer = BayesianOptimization(
     pbounds=pbounds, 
     verbose = 2, 
 )
-
+obj_function(dropout, lr, epochs)
+"""
 start_time = time.time()
-bayes_optimizer.maximize(init_points=5, n_iter=5)   #so it runs fasta 
+bayes_optimizer.maximize(init_points=2, n_iter=2)   #so it runs fasta 
 time_took = time.time() - start_time
 
 print (f"Total runtime: {time_took}")
-print(optimizer.max)
-
+print(bayes_optimizer.max)
+"""
 def show_random_predictions(model, test_loader, class_mapping, num_images=5):
     model.eval()
     images, labels = next(iter(test_loader))
@@ -193,64 +210,3 @@ def show_random_predictions(model, test_loader, class_mapping, num_images=5):
 show_random_predictions(model, test_loader, dataset.class_mapping)
 
 #-----------------------------------------------------------------------------------------------------------
-
-"""
-# Prediction / testing - most of this part is just debugging 
-img_path = './data/ovary_diseases/clean_ovaries.jpg' 
-img = Image.open(img_path).convert("RGB")   #do i need RGB? 
-img = preprocess(img).unsqueeze(0).to(device)   
-
-print("test image nim/max: ", img.min(), img.max()) #resnet50 pre-defined weight allow them to be between -2 and 2
-
-with torch.no_grad():
-    pred = model(img)
-    probabilities = torch.nn.functional.softmax(pred, dim=1)  # debug - Converts logits to probabilities
-    pred_label = torch.argmax(probabilities, dim=1) #debug
-    
-    predicted_class = list(dataset.class_mapping.keys())[list(dataset.class_mapping.values()).index(pred_label.item())]
-    print(f"Predicted label index: {pred_label.item()}")  #debug
-    print("Predicted class name: ", predicted_class)
-
-# De-normalize for Display (ResNet50 expects the input to be in a certain range for display)
-mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)  # ImageNet mean
-std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)  # ImageNet std
-img_denorm = img.squeeze(0).cpu() * std + mean  # Reverse normalization
-img_denorm = img_denorm.clamp(0, 1)  # Ensure values are within [0, 1] for display
-
-
-plt.figure()    # Plotting of image at the end
-plt.title(f"Predicted Label: {predicted_class}")
-img = img.squeeze(0).permute(1, 2, 0).cpu().numpy()
-img = (img - img.min()) / (img.max() - img.min())  # Normalize for display
-plt.imshow(img)
-plt.xticks([])
-plt.yticks([])
-plt.savefig(f"./prediction_of_image.png", dpi=300)
-plt.show()
-
-# Apply Transformations
-transformed_image = preprocess(original_image)
-
-# Convert Tensor back to Image for Visualization
-def tensor_to_image(tensor):
-    inv_normalize = transforms.Normalize(
-        mean=[-m/s for m, s in zip([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])],
-        std=[1/s for s in [0.229, 0.224, 0.225]]
-    )
-    unnormalized_tensor = inv_normalize(tensor)  # Undo normalization
-    unnormalized_tensor = unnormalized_tensor.clamp(0, 1)  # Clip values to valid range
-    return unnormalized_tensor.permute(1, 2, 0).numpy()  # Convert to HWC format
-
-# Plot Original vs. Processed Image
-fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-axes[0].imshow(original_image)
-axes[0].set_title("Original Image")
-axes[0].axis("off")
-
-axes[1].imshow(tensor_to_image(transformed_image))
-axes[1].set_title("Transformed Image (Preprocessed)")
-axes[1].axis("off")
-
-plt.show()
-
-"""
