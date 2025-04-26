@@ -15,6 +15,7 @@ import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 import torch
 import torch.nn as nn
+import torch.optim
 from torch.optim import lr_scheduler
 from torchvision import datasets, transforms 
 from torchvision.models import resnet50, ResNet50_Weights
@@ -23,9 +24,10 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from collections import Counter
 import pandas as pd
+import seaborn as sns
 
 from ray import tune
-from ray.tune.schedulers import HyperBandScheduler
+from ray.tune.schedulers import ASHAScheduler, HyperBandScheduler
 
 #-----------------------------------------------------------------------------------------------------------
 #Hyperparameters - they are not defined inside ResNet, but set when training the model 
@@ -63,8 +65,8 @@ transform = transforms.Compose([
     #transforms.Normalize(mean=custom_mean.tolist(), std=custom_std.tolist())  # Custom normalization
     ])
 
-data_folder = './data/ovary_diseases/images'
-csv_file = './data/ovary_diseases/_annotations1.csv'
+data_folder = os.path.abspath('./data/ovary_diseases/images')
+csv_file = os.path.abspath('./data/ovary_diseases/_annotations1.csv')
 df = pd.read_csv(csv_file) #columns: filename, label
 
 df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)     # Shuffle the rows of the dataframe
@@ -84,7 +86,7 @@ class ImageDataset(Dataset):        # retrieving the class labels from the csv f
         return len(self.df)
     
     def __getitem__(self, idx):
-        img_name = self.df.iloc[idx, 0]  # Get filename
+        img_name = self.df.iloc[idx, 0].replace("\\", "/")  # Get filename
         label_name = self.df.iloc[idx, 1]  # Get class label
         img_path = os.path.join(self.img_folder, img_name)
         image = Image.open(img_path).convert("RGB")  # Open image
@@ -112,7 +114,6 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 #-----------------------------------------------------------------------------------------
 #initialize model with corresponding weights - ResNet50 API 
 
-
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
     param.requires_grad = False
 
@@ -127,20 +128,33 @@ scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)  #mig
 #-----------------------------------------------------------------------------------------
 # Hyperparameter optimization
 
-
-
-# Define an evaluation function for Bayesian Optimization
-def obj_function(config): #important to do it after the model is set to eval() mode 
+# Define an evaluation function for raytune Optimization
+def obj_function(config, trial = None): #important to do it after the model is set to eval() mode 
+    #trial_id = trial.trial_id if trial else "unknown"
+    #print(f"Running trial: {trial.trial_id}")
     dropout = config["dropout"]
     lr = config["lr"]
     epochs = config["epochs"]
-    batch_size = config["batch_size"]
+    batch_size = int(config["batch_size"])
     
-    
+    # NEW: Re-initialize model
+    base_model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+    for param in base_model.parameters():
+        param.requires_grad = False
+    num_ftrs = base_model.fc.in_features
+    base_model.fc = nn.Sequential(
+        nn.Dropout(p=dropout),
+        nn.Linear(num_ftrs, num_classes)
+    )
+    model = base_model.to(device)
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    criterion = nn.CrossEntropyLoss()
+
     batch_size = int(batch_size)  # Convert batch_size to int
     epochs = int(epochs)  # Convert epochs to int
-    trial_id = tune.get_trial_info().trial_id
-    trial_name = tune.get_trial_info().trial_name
+    #trial_id = tune.get_trial_info().trial_id
+    #trial_name = tune.get_trial_info().trial_name
     best_val_accuracy = 0.0
     # Define loss function and optimizer
     #criterion = nn.CrossEntropyLoss()
@@ -163,6 +177,8 @@ def obj_function(config): #important to do it after the model is set to eval() m
             optimizer.step()  # Update model weights
             running_loss += loss.item()
 
+        #report metrics to raytune 
+
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader):.4f}')
 
     model.eval()
@@ -182,15 +198,15 @@ def obj_function(config): #important to do it after the model is set to eval() m
     
     if acc > best_val_accuracy:
         best_val_accuracy = acc
-# Print progress for this trial
-    print(f"[Trial {trial_id} {trial_name}] Epoch {epoch+1}/{config['epochs']}: "
-              f"Val Acc: {acc:.4f} (Best: {best_val_accuracy:.4f})")
+    # Print progress for this trial
+    #print(f"[Trial {trial_id} {trial_name}] Epoch {epoch+1}/{config['epochs']}: "
+    #          f"Val Acc: {acc:.4f} (Best: {best_val_accuracy:.4f})")
 
-    tune.report(
-            loss=eval_loss/len(test_loader),
-            accuracy=acc,
-            training_loss=running_loss/len(train_loader)
-    )
+    tune.report({
+            "loss": eval_loss/len(test_loader),
+            "acc": acc,
+            "training_loss": running_loss/len(train_loader)
+    })
     print(acc)
     return acc
 #obj_function(dropout, lr, epochs, batch_size)   #step_size can be left out, bc scheduler is already unimportant 
@@ -204,17 +220,23 @@ config = {
 }
 
 # Hyperband scheduler
-hyperband = HyperBandScheduler(max_t=5, reduction_factor=3)
+hy_scheduler = ASHAScheduler(
+    metric="acc",
+    mode="max",       # Minimizing loss
+    max_t=10,         # Maximum number of epochs
+    grace_period=1,   # Minimum epochs before stopping trials
+    reduction_factor=2
+)
 
 # Run trials
 analysis = tune.run(
-    obj_function,
-    resources_per_trial={"cuda:0" if torch.cuda.is_available() else "cpu"},
+    tune.with_parameters(obj_function),
+    #obj_function,
+    metric = "acc", 
+    resources_per_trial={"cpu": 1, "gpu": 1 if torch.cuda.is_available() else 0},
     config=config,
     num_samples=5,
-    scheduler=hyperband,
-    metric="acc",
-    mode="max"
+    scheduler=hy_scheduler
 )
 
 print("Best config:", analysis.best_config)
@@ -242,6 +264,13 @@ def show_random_predictions(model, test_loader, class_mapping, num_images=5):
         ax.axis('off')
     plt.show()
 show_random_predictions(model, test_loader, dataset.class_mapping)
+
+# Plot loss vs learning rate
+sns.scatterplot(x="config.lr", y="loss", data=df)
+plt.xlabel("Learning Rate")
+plt.ylabel("Loss")
+plt.title("Learning Rate vs Loss")
+plt.show()
 
 #-----------------------------------------------------------------------------------------------------------
 

@@ -61,12 +61,12 @@ transform = transforms.Compose([
     #transforms.Normalize(mean=custom_mean.tolist(), std=custom_std.tolist())  # Custom normalization
     ])
 
-data_folder = './data/ovary_diseases/images'
-csv_file = './data/ovary_diseases/_annotations1.csv'
+data_folder = '.\data\_filtered_ovary_diseases\images'
+csv_file = '.\data\_filtered_ovary_diseases\_annotations1.csv'
 df = pd.read_csv(csv_file) #columns: filename, label
 
 df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)     # Shuffle the rows of the dataframe
-shuffled_csv_file = './data/ovary_diseases/_annotations1_shuffled.csv'      # maybe use StratifiedShuffleSplit? 
+shuffled_csv_file = '.\data\_filtered_ovary_diseases\_annotations1_shuffled.csv'      # maybe use StratifiedShuffleSplit? 
 df_shuffled.to_csv(shuffled_csv_file, index=False)
 
 class ImageDataset(Dataset):        # retrieving the class labels from the csv file 
@@ -104,12 +104,11 @@ plt.show()              # this is to see how the image processing was done befor
 train_size = int(0.8 * len(dataset))        #later to be redivided based on hyperparameter optimization
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size]) #each sets should have all classes 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+#train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+#test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 #-----------------------------------------------------------------------------------------
 #initialize model with corresponding weights - ResNet50 API 
-
 
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
     param.requires_grad = False
@@ -126,12 +125,15 @@ scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)  #mig
 # Hyperparameter optimization
 
 # Define an evaluation function for Bayesian Optimization
-def obj_function(dropout, lr, epochs): #important to do it after the model is set to eval() mode 
-    #batch_size = int(batch_size)  # Convert batch_size to int
+def obj_function(dropout, lr, epochs, batch_size): #important to do it after the model is set to eval() mode 
+    batch_size = int(batch_size)  # Convert batch_size to int
     epochs = int(epochs)  # Convert epochs to int
     # Define loss function and optimizer
     #criterion = nn.CrossEntropyLoss()
     #optimizer = optim.Adam(model.fc.parameters(), lr=learning_rate)    #updates model weights 
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False) #do i need to reload the data here?
 
     for module in model.modules(): 
         if isinstance(module, nn.Dropout): 
@@ -167,10 +169,10 @@ def obj_function(dropout, lr, epochs): #important to do it after the model is se
     print(acc)
     return acc 
 
-pbounds = {'dropout': (0.3, 0.499), 
-           'lr': (0.04, 0.1), #learning_rate - 0.1 might be too high, 0.001 is enough) 
-           #'batch_size': (4, 64), 
-           #'epochs': (10, 15),
+pbounds = {'dropout': (0.2, 0.499), 
+           'lr': (0.0005, 0.1), #learning_rate - 0.1 might be too high, 0.001 is enough) 
+           'batch_size': (16, 128), 
+           'epochs': (10, 35),
            }
 
 bayes_optimizer = BayesianOptimization(
@@ -178,15 +180,14 @@ bayes_optimizer = BayesianOptimization(
     pbounds=pbounds, 
     verbose = 2, 
 )
-obj_function(dropout, lr, epochs)
-"""
+#obj_function(dropout, lr, epochs)
 start_time = time.time()
-bayes_optimizer.maximize(init_points=2, n_iter=2)   #so it runs fasta 
+bayes_optimizer.maximize(init_points=5, n_iter=10)   #so it runs fasta 
 time_took = time.time() - start_time
 
 print (f"Total runtime: {time_took}")
 print(bayes_optimizer.max)
-"""
+
 def show_random_predictions(model, test_loader, class_mapping, num_images=5):
     model.eval()
     images, labels = next(iter(test_loader))
@@ -212,7 +213,7 @@ show_random_predictions(model, test_loader, dataset.class_mapping)
 
 """
 # Prediction / testing - most of this part is just debugging 
-img_path = './data/ovary_diseases/clean_ovaries.jpg' 
+img_path = './data/filtered_ovary_diseases/clean_ovaries.jpg' 
 img = Image.open(img_path).convert("RGB")   #do i need RGB? 
 img = transform(img).unsqueeze(0).to(device)   
 
