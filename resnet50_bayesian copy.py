@@ -32,12 +32,12 @@ from bayes_opt import BayesianOptimization
 #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #if GPU available, otherwise falls back to CPU - can be removed 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-batch_size = 64     #even if its 61, its beter to work with 2^n numbers  
-num_classes = 9
-lr = 0.05554
+batch_size = 32     #even if its 61, its beter to work with 2^n numbers  
+num_classes = 6
+lr = 0.02768
 step_size = 7
-epochs = 12
-dropout = 0.3282 #not in resnet by default but helps with normalization 
+epochs = 20
+dropout = 0.3526 #not in resnet by default but helps with normalization 
 #62.59% accuracy - 60.65 - 0.3282 - 12.23 - 0.05554
 #                 batch   dropout   epochs      lr
 
@@ -104,8 +104,8 @@ plt.show()              # this is to see how the image processing was done befor
 train_size = int(0.8 * len(dataset))        #later to be redivided based on hyperparameter optimization
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size]) #each sets should have all classes 
-#train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-#test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 #-----------------------------------------------------------------------------------------
 #initialize model with corresponding weights - ResNet50 API 
@@ -171,8 +171,8 @@ def obj_function(dropout, lr, epochs, batch_size): #important to do it after the
 
 pbounds = {'dropout': (0.2, 0.499), 
            'lr': (0.0005, 0.1), #learning_rate - 0.1 might be too high, 0.001 is enough) 
-           'batch_size': (16, 128), 
-           'epochs': (10, 35),
+           'batch_size': ([32, 64]), 
+           'epochs': (10, 20),
            }
 
 bayes_optimizer = BayesianOptimization(
@@ -180,11 +180,10 @@ bayes_optimizer = BayesianOptimization(
     pbounds=pbounds, 
     verbose = 2, 
 )
-#obj_function(dropout, lr, epochs)
+obj_function(dropout, lr, epochs, batch_size)
 start_time = time.time()
 bayes_optimizer.maximize(init_points=5, n_iter=10)   #so it runs fasta 
 time_took = time.time() - start_time
-
 print (f"Total runtime: {time_took}")
 print(bayes_optimizer.max)
 
@@ -270,4 +269,16 @@ axes[1].axis("off")
 
 plt.show()
 
+"""
+"""
+| 1         | 76.17     | 50.15     | 0.2837    | 18.72     | 0.06735   |
+| 2         | 76.68     | 39.73     | 0.4253    | 19.99     | 0.09648   |
+| 3         | 76.68     | 55.36     | 0.3665    | 15.86     | 0.04312   |
+| 4         | 78.24     | 61.98     | 0.3058    | 19.33     | 0.03482   |
+| 5         | 79.79     | 50.0      | 0.281     | 16.6      | 0.03329   |
+| 6         | 78.24     | 53.12     | 0.2331    | 13.35     | 0.06646   |
+| 7         | 76.68     | 46.05     | 0.214     | 12.98     | 0.07355   |
+| 8         | 78.24     | 49.33     | 0.2207    | 19.92     | 0.092     |
+| 9         | 78.76     | 55.58     | 0.3361    | 13.63     | 0.01055   |
+| 10        | 77.2      | 50.07     | 0.4248    | 17.95     | 0.04984   |
 """
