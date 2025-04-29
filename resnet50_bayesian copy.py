@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from collections import Counter
 import pandas as pd
+from tqdm import tqdm
 
 from bayes_opt import BayesianOptimization
 
@@ -32,14 +33,16 @@ from bayes_opt import BayesianOptimization
 #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') #if GPU available, otherwise falls back to CPU - can be removed 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-batch_size = 32     #even if its 61, its beter to work with 2^n numbers  
+batch_size = 32     #maybe 64?
 num_classes = 6
-lr = 0.02768
-step_size = 7
-epochs = 20
-dropout = 0.3526 #not in resnet by default but helps with normalization 
+lr = 0.01055
+step_size = 30 #image_num / batch size # maybe try 100 later
+epochs = 1 # SET IT TO 1 FOR TESTING THE FINAL IMAGE INPUT - LETS SAVE TIME HERE 
+dropout = 0.3361 #not in resnet by default but helps with normalization 
 #62.59% accuracy - 60.65 - 0.3282 - 12.23 - 0.05554
 #                 batch   dropout   epochs      lr
+
+#+ data augmentation! 
 
 #-----------------------------------------------------------------------------------------------------------
 #DATALOADING
@@ -62,11 +65,11 @@ transform = transforms.Compose([
     ])
 
 data_folder = '.\data\_filtered_ovary_diseases\images'
-csv_file = '.\data\_filtered_ovary_diseases\_annotations1.csv'
+csv_file = '.\data\_filtered_ovary_diseases\_annotations.csv'
 df = pd.read_csv(csv_file) #columns: filename, label
 
 df_shuffled = df.sample(frac=1, random_state=42).reset_index(drop=True)     # Shuffle the rows of the dataframe
-shuffled_csv_file = '.\data\_filtered_ovary_diseases\_annotations1_shuffled.csv'      # maybe use StratifiedShuffleSplit? 
+shuffled_csv_file = '.\data\_filtered_ovary_diseases\_annotations_shuffled.csv'      # maybe use StratifiedShuffleSplit? 
 df_shuffled.to_csv(shuffled_csv_file, index=False)
 
 class ImageDataset(Dataset):        # retrieving the class labels from the csv file 
@@ -94,8 +97,9 @@ class ImageDataset(Dataset):        # retrieving the class labels from the csv f
     
 dataset = ImageDataset(df_shuffled, data_folder, transform=transform)
 print(dataset.class_mapping)        #debug to see the classes 
-img, label = dataset[0]  # Get one sample
 
+# to get one sample in the beginning to see what the model is working with after the transformation is applied 
+img, label = dataset[0]  # Get one sample
 plt.imshow(img.permute(1, 2, 0).numpy())  # Convert (C, H, W) to (H, W, C) for visualization
 #plt.title(f"Class: {label}")
 plt.show()              # this is to see how the image processing was done before feeding it into the network 
@@ -122,7 +126,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)  #might be useless? 
 
 #-----------------------------------------------------------------------------------------
-# Hyperparameter optimization
+# Hyperparameter optimization inside the training function
 
 # Define an evaluation function for Bayesian Optimization
 def obj_function(dropout, lr, epochs, batch_size): #important to do it after the model is set to eval() mode 
@@ -180,14 +184,21 @@ bayes_optimizer = BayesianOptimization(
     pbounds=pbounds, 
     verbose = 2, 
 )
+#----------------------------------------------------------------------------------------
+#initializing the actual program
+
 obj_function(dropout, lr, epochs, batch_size)
+"""
+#bayesian initialization: 
 start_time = time.time()
 bayes_optimizer.maximize(init_points=5, n_iter=10)   #so it runs fasta 
 time_took = time.time() - start_time
 print (f"Total runtime: {time_took}")
 print(bayes_optimizer.max)
+"""
 
-def show_random_predictions(model, test_loader, class_mapping, num_images=5):
+def show_random_predictions(model, test_loader, class_mapping, num_images=5): 
+    #maybe i need one from each class 
     model.eval()
     images, labels = next(iter(test_loader))
     images, labels = images[:num_images], labels[:num_images]
@@ -210,9 +221,9 @@ show_random_predictions(model, test_loader, dataset.class_mapping)
 
 #-----------------------------------------------------------------------------------------------------------
 
-"""
-# Prediction / testing - most of this part is just debugging 
-img_path = './data/filtered_ovary_diseases/clean_ovaries.jpg' 
+# Prediction / testing for fed in image (for final UI) - most of this part is just debugging 
+
+img_path = '.\data\_filtered_ovary_diseases\simple_cyst.jpg'
 img = Image.open(img_path).convert("RGB")   #do i need RGB? 
 img = transform(img).unsqueeze(0).to(device)   
 
@@ -227,11 +238,15 @@ with torch.no_grad():
     print(f"Predicted label index: {pred_label.item()}")  #debug
     print("Predicted class name: ", predicted_class)
 
+
+"""
+#do i need this? 
 # De-normalize for Display (ResNet50 expects the input to be in a certain range for display)
 mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)  # ImageNet mean
 std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)  # ImageNet std
 img_denorm = img.squeeze(0).cpu() * std + mean  # Reverse normalization
 img_denorm = img_denorm.clamp(0, 1)  # Ensure values are within [0, 1] for display
+"""
 
 
 plt.figure()    # Plotting of image at the end
@@ -241,11 +256,16 @@ img = (img - img.min()) / (img.max() - img.min())  # Normalize for display
 plt.imshow(img)
 plt.xticks([])
 plt.yticks([])
-plt.savefig(f"./prediction_of_image.png", dpi=300)
+plt.savefig(f".\prediction_of_image.png", dpi=300)
 plt.show()
 
-# Apply Transformations
-transformed_image = transform(original_image)
+
+"""
+# Apply Transformations if normalization is used on the images - so it can be displayed for final test 
+# the normalization done in the begining when feeding into resnet has to be reverted so plt can display 
+# the og image 
+
+transformed_image = transform(img)
 
 # Convert Tensor back to Image for Visualization
 def tensor_to_image(tensor):
@@ -259,8 +279,8 @@ def tensor_to_image(tensor):
 
 # Plot Original vs. Processed Image
 fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-axes[0].imshow(original_image)
-axes[0].set_title("Original Image")
+axes[0].imshow(img)
+axes[0].set_title("Original Image") 
 axes[0].axis("off")
 
 axes[1].imshow(tensor_to_image(transformed_image))
@@ -268,17 +288,4 @@ axes[1].set_title("Transformed Image (Preprocessed)")
 axes[1].axis("off")
 
 plt.show()
-
-"""
-"""
-| 1         | 76.17     | 50.15     | 0.2837    | 18.72     | 0.06735   |
-| 2         | 76.68     | 39.73     | 0.4253    | 19.99     | 0.09648   |
-| 3         | 76.68     | 55.36     | 0.3665    | 15.86     | 0.04312   |
-| 4         | 78.24     | 61.98     | 0.3058    | 19.33     | 0.03482   |
-| 5         | 79.79     | 50.0      | 0.281     | 16.6      | 0.03329   |
-| 6         | 78.24     | 53.12     | 0.2331    | 13.35     | 0.06646   |
-| 7         | 76.68     | 46.05     | 0.214     | 12.98     | 0.07355   |
-| 8         | 78.24     | 49.33     | 0.2207    | 19.92     | 0.092     |
-| 9         | 78.76     | 55.58     | 0.3361    | 13.63     | 0.01055   |
-| 10        | 77.2      | 50.07     | 0.4248    | 17.95     | 0.04984   |
 """

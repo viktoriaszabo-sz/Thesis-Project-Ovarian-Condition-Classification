@@ -1,6 +1,6 @@
-choco cyst: 	337
+choco cyst: 	100
 high grade: 	47
 simple cyst: 	59
-teratoma 	314
-pcos		105
+teratoma 	100
+pcos		100 
 clean 		100
