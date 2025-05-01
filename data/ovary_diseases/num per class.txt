@@ -1,9 +1,0 @@
-choco cyst: 	337
-high grade: 	47
-mucinous:	101
-serious cysta: 	206
-simple cyst: 	59
-teratoma 	314
-theca cell tumour	80
-pcos		105
-clean 		100
