@@ -3,6 +3,7 @@
 
 ----------------------------------------------------------------------------------------------------------"""
 import os
+import time
 import numpy as np
 import torch
 import torch.nn as nn
@@ -114,6 +115,7 @@ def obj_function(dropout, lr, epochs, batch_size):
         if isinstance(module, nn.Dropout): 
             module.p = dropout    
 
+    start_time = time.time()
     model.train()   #it will only train the fc layer instead of the whole structure 
     for epoch in range(epochs):
         running_loss = 0.0
@@ -128,6 +130,9 @@ def obj_function(dropout, lr, epochs, batch_size):
             running_loss += loss.item()
 
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader):.4f}')
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f"\nTraining completed in {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
 
     model.eval()
     with torch.no_grad():   # disable gradient computation for faster evaluation

@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch.optim import lr_scheduler
 from torchvision import transforms 
-from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
+from torchvision.models import googlenet, GoogLeNet_Weights
 from torch.utils.data import DataLoader, random_split, Dataset
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -31,9 +31,9 @@ dropout = 0.3361 #not in resnet by default but helps with normalization
 #-----------------------------------------------------------------------------------------------------------
 #DATALOADING
 #weights = DenseNet161_Weights   #this will help us with a pre-built image transformation 
-weights=MobileNet_V2_Weights.IMAGENET1K_V1
+weights=GoogLeNet_Weights.IMAGENET1K_V1
 #use transfer learning and pre-trained models
-model = mobilenet_v2(weights=weights).to(device) 
+model = googlenet(weights=weights).to(device) 
 print(model)
 
 data_folder = '.\data\_filtered_ovary_diseases\images'
@@ -94,8 +94,7 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
     param.requires_grad = False
 
-#num_ftrs = model.classifier.in_features #we modify the final layer here 
-model.classifier[1] = nn.Linear(in_features=1280, out_features=num_classes)
+model.fc = nn.Linear(in_features=1024, out_features=num_classes)
 model.to(device)
 
 criterion = nn.CrossEntropyLoss()
