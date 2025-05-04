@@ -16,18 +16,29 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import pandas as pd
 from bayes_opt import BayesianOptimization
+import sys
+from pathlib import Path
+
+# Get the absolute path of the project root
+project = Path(__file__).parents[1]  # Adjust based on your actual structure
+sys.path.append(str(project))
+
+#from utils import dataloading # + other models 
+from utils.dataloading import transform_aug, transform, dataset, test_dataset, train_dataset, device
+
+#model = mobilenet_v2(num_classes=6)
+#model.load_state_dict(torch.load('mobilenet_model.pth', map_location='cpu'))
+#model.eval()
 
 #-----------------------------------------------------------------------------------------------------------
 #Parameters
-#device = torch_directml.device() #causes memory leak on AMD
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 num_classes = 6
 step_size = 30 #image_num / batch size 
 
 #hyperparameters
 batch_size = 32     #maybe 64?
 lr = 0.01055
-epochs = 20 
+epochs = 1 #og 20  
 dropout = 0.3361 #not in resnet by default but helps with normalization 
 
 #-----------------------------------------------------------------------------------------------------------
@@ -36,57 +47,16 @@ dropout = 0.3361 #not in resnet by default but helps with normalization
 weights=MobileNet_V2_Weights.IMAGENET1K_V1
 #use transfer learning and pre-trained models
 model = mobilenet_v2(weights=weights).to(device) 
-print(model)
+#print(model)
 
-data_folder = '.\data\_filtered_ovary_diseases\images'
-csv_file = '.\data\_filtered_ovary_diseases\_annotations.csv'
-df = pd.read_csv(csv_file) #columns: filename, label
+# to get one sample in the beginning to see what the model is working with after the transformation is applied 
+img, label = dataset[0]  # Get one sample
+plt.imshow(img.permute(1, 2, 0).numpy())  # Convert (C, H, W) to (H, W, C) for visualization
+#plt.title(f"Class: {label}")
+plt.show()              # this is to see how the image processing was done before feeding it into the network 
+                        # based on this, tune the transformation 
 
-transform_aug = transforms.Compose([
-    transforms.Resize(256),  # resize for resnet50 settings
-    transforms.CenterCrop(224),
-    transforms.RandomRotation(10),  # slight rotations help the model generalize
-    transforms.RandomHorizontalFlip(),  # augmentation only for training
-    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),  # Minor translation variation
-    transforms.ToTensor(),  
-    #transforms.Normalize(mean=mean, std=std)  # no norm, i think the best: test image nim/max:  tensor(0., device='cuda:0') tensor(0.9922, device='cuda:0')
-    ])
 
-transform = transforms.Compose([
-    transforms.Resize(256),  
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),  #no augmentation, bc this one will be used for testing
-    #transforms.Normalize(mean=mean, std=std) # no norm
-    ])
-
-class ImageDataset(Dataset):        # retrieving the class labels from the csv file 
-    def __init__(self, csv_df, img_folder, transform=None):
-        self.df = csv_df
-        self.img_folder = img_folder
-        self.transform = transform
-        # mapping from class names to indices - so the model can work with it
-        self.class_mapping = {name: idx for idx, name in enumerate(sorted(self.df['label'].unique()))}
-
-    def __len__(self):
-        return len(self.df)
-    
-    def __getitem__(self, idx):
-        img_name = self.df.iloc[idx, 0]  # get filename
-        label_name = self.df.iloc[idx, 1]  # get class label
-        img_path = os.path.join(self.img_folder, img_name)
-        image = Image.open(img_path).convert("RGB")  # Open image
-        if self.transform:
-            image = self.transform(image)
-
-        label = self.class_mapping[label_name]  # convert label to number
-        return image, torch.tensor(label, dtype=torch.long) 
-    
-dataset = ImageDataset(df, data_folder, transform=transform_aug)
-#print(dataset.class_mapping)        #debug to see the classes 
-
-train_size = int(0.8 * len(dataset))        #later to be redivided based on hyperparameter optimization
-test_size = len(dataset) - train_size
-train_dataset, test_dataset = random_split(dataset, [train_size, test_size]) #each sets should have all classes 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -94,7 +64,7 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 #initialize model with corresponding weights - densenet
 
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
-    param.requires_grad = False
+    param.requires_grad = False 
 
 #num_ftrs = model.classifier.in_features #we modify the final layer here 
 model.classifier[1] = nn.Linear(in_features=1280, out_features=num_classes)
@@ -107,7 +77,8 @@ scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 #-----------------------------------------------------------------------------------------
 # Hyperparameter optimization inside the training function
 
-#evaluation function for Bayesian Optimization
+#if __name__ == "__main__":
+    #evaluation function for Bayesian Optimization
 def obj_function(dropout, lr, epochs, batch_size): 
     batch_size = int(batch_size)
     epochs = int(epochs) 
@@ -152,13 +123,17 @@ def obj_function(dropout, lr, epochs, batch_size):
     acc = 100.0 * n_correct / n_samples                 #accuracy score = correct prediciton / all samples 
     #confidence score here?
     print(acc)
+    torch.save(model.state_dict(), '.\models\mobilenet_model.pth')
     return acc 
 
+#torch.save(model.state_dict(), 'mobilenet_model.pth')
+
+
 pbounds = {'dropout': (0.2, 0.499), 
-           'lr': (0.0005, 0.1), 
-           'batch_size': ([32, 64]), 
-           'epochs': (10, 20),
-           }
+        'lr': (0.0005, 0.1), 
+        'batch_size': ([32, 64]), 
+        'epochs': (10, 20),
+        }
 
 bayes_optimizer = BayesianOptimization(
     f=obj_function, 
@@ -168,7 +143,13 @@ bayes_optimizer = BayesianOptimization(
 #----------------------------------------------------------------------------------------
 #initializing the actual program
 
-obj_function(dropout, lr, epochs, batch_size)
+if __name__ == "__main__":
+    obj_function(dropout, lr, epochs, batch_size)
+
+
+
+
+
 """ # bayesian method - uncomment if needed
 #bayesian initialization: 
 start_time = time.time()
@@ -177,7 +158,7 @@ time_took = time.time() - start_time
 print (f"Total runtime: {time_took}")
 print(bayes_optimizer.max)
 """
-
+"""
 def show_random_predictions(model, test_loader, class_mapping, num_images=5): 
     #maybe i need one from each class 
     model.eval()
@@ -199,7 +180,15 @@ def show_random_predictions(model, test_loader, class_mapping, num_images=5):
         ax.axis('off')
     plt.show()
 show_random_predictions(model, test_loader, dataset.class_mapping)
+"""
 
+
+
+
+
+
+
+"""
 #-----------------------------------------------------------------------------------------------------------
 # Prediction / testing for fed in image (for final UI) - most of this part is just debugging 
 # to put this part to a separate file 
@@ -230,3 +219,4 @@ plt.xticks([])
 plt.yticks([])
 plt.savefig(f".\prediction_of_image.png", dpi=300)
 plt.show()
+"""
