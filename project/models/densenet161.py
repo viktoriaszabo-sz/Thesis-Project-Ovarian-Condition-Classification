@@ -6,7 +6,7 @@ import time
 import torch
 import torch.nn as nn
 from torch.optim import lr_scheduler
-from torchvision.models import inception_v3, Inception_V3_Weights
+from torchvision.models import densenet161, DenseNet161_Weights
 from torch.utils.data import DataLoader
 from bayes_opt import BayesianOptimization
 import sys
@@ -31,9 +31,9 @@ dropout = 0.3361 #not in resnet by default but helps with normalization
 #-----------------------------------------------------------------------------------------------------------
 #DATALOADING
 #weights = DenseNet161_Weights   #this will help us with a pre-built image transformation 
-weights=Inception_V3_Weights.IMAGENET1K_V1
+weights=DenseNet161_Weights.IMAGENET1K_V1
 #use transfer learning and pre-trained models
-model = inception_v3(weights=weights).to(device) 
+model = densenet161(weights=weights).to(device) 
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -44,13 +44,8 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
     param.requires_grad = False
 
-model.fc = nn.Linear(model.fc.in_features, num_classes)
-
-# Modify auxiliary classifier (used only during training)
-if model.AuxLogits is not None:
-    model.AuxLogits.fc = nn.Linear(model.AuxLogits.fc.in_features, num_classes)
-
-# Move model to device
+num_ftrs = model.classifier.in_features #we modify the final layer here 
+model.classifier = nn.Linear(num_ftrs, num_classes)
 model.to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -89,7 +84,6 @@ def obj_function(dropout, lr, epochs, batch_size):
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader):.4f}')
     end_time = time.time()
     total_time = end_time - start_time
-
     print(f"\nTraining completed in {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
 
     model.eval()
@@ -105,7 +99,7 @@ def obj_function(dropout, lr, epochs, batch_size):
     acc = 100.0 * n_correct / n_samples                 #accuracy score = correct prediciton / all samples 
     #confidence score here?
     print(acc)
-    torch.save(model.state_dict(), '.\models\inceptionv3_model.pth')
+    torch.save(model.state_dict(), '.\models\densenet161_model.pth')
     return acc 
 
 pbounds = {'dropout': (0.2, 0.499), 
@@ -124,6 +118,7 @@ bayes_optimizer = BayesianOptimization(
 
 if __name__ == "__main__":
     obj_function(dropout, lr, epochs, batch_size)
+
 
 """ # bayesian method - uncomment if needed
 #bayesian initialization: 

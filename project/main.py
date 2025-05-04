@@ -1,21 +1,10 @@
 """-------------------------------------------------------------------------------------------------------
 - create some data visualization 
-
+REMEMBER: to run it in the project folder 
 ----------------------------------------------------------------------------------------------------------"""
-#import os
-#import time
-import numpy as np
 import torch
-import torch.nn as nn
-#import torch_directml # Use DirectML backend
-#from torch.optim import lr_scheduler
-#from torchvision import transforms 
-#from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
-#from torch.utils.data import DataLoader, random_split, Dataset
 import matplotlib.pyplot as plt
 from PIL import Image
-#import pandas as pd
-#from bayes_opt import BayesianOptimization
 from torchvision.models import mobilenet_v2
 import sys
 from pathlib import Path
@@ -24,21 +13,18 @@ from pathlib import Path
 project = Path(__file__).parent  # Adjust based on your actual structure
 sys.path.append(str(project))
 
-from models import mobilenet # + other models 
-from models.mobilenet import mobilenet_v2
-
-from utils import dataloading
+from models.mobilenet import mobilenet_v2 #change according to name
 from utils.dataloading import dataset, transform, test_dataset, device
 
-model = mobilenet_v2(num_classes=6)
+model = mobilenet_v2(num_classes=6) # change according to name
 model.load_state_dict(torch.load('.\models\mobilenet_model.pth', map_location='cpu', weights_only=True))
+                                            #change according to model name
 model.eval()
 #---------------------------------------------------------------------------
 #input testing image
 img_path = '.\data\_filtered_ovary_diseases\simple_cyst.jpg'
 
 #here would come an actual implementation of a UI 
-
 
 #-----------------------------------------------------------------------------------------------------------
 # Prediction / testing for fed in image (for final UI) - most of this part is just debugging 
