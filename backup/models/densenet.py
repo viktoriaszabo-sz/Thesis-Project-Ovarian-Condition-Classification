@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch.optim import lr_scheduler
 from torchvision import transforms 
-from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
+from torchvision.models import densenet161, DenseNet161_Weights
 from torch.utils.data import DataLoader, random_split, Dataset
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -31,9 +31,9 @@ dropout = 0.3361 #not in resnet by default but helps with normalization
 #-----------------------------------------------------------------------------------------------------------
 #DATALOADING
 #weights = DenseNet161_Weights   #this will help us with a pre-built image transformation 
-weights=MobileNet_V2_Weights.IMAGENET1K_V1
+weights=DenseNet161_Weights.IMAGENET1K_V1
 #use transfer learning and pre-trained models
-model = mobilenet_v2(weights=weights).to(device) 
+model = densenet161(weights=weights).to(device) 
 print(model)
 
 data_folder = '.\data\_filtered_ovary_diseases\images'
@@ -94,8 +94,8 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 for param in model.parameters():        #this will freeze all the layers, so i dont retrain the whole model later
     param.requires_grad = False
 
-#num_ftrs = model.classifier.in_features #we modify the final layer here 
-model.classifier[1] = nn.Linear(in_features=1280, out_features=num_classes)
+num_ftrs = model.classifier.in_features #we modify the final layer here 
+model.classifier = nn.Linear(num_ftrs, num_classes)
 model.to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -134,7 +134,6 @@ def obj_function(dropout, lr, epochs, batch_size):
         print(f'Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader):.4f}')
     end_time = time.time()
     total_time = end_time - start_time
-
     print(f"\nTraining completed in {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
 
     model.eval()
