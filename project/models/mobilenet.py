@@ -38,7 +38,7 @@ step_size = 30 #image_num / batch size
 #hyperparameters
 batch_size = 32     #maybe 64?
 lr = 0.01055
-epochs = 1 #og 20  
+epochs = 20 #og 20  
 dropout = 0.3361 #not in resnet by default but helps with normalization 
 
 #-----------------------------------------------------------------------------------------------------------
@@ -49,13 +49,14 @@ weights=MobileNet_V2_Weights.IMAGENET1K_V1
 model = mobilenet_v2(weights=weights).to(device) 
 #print(model)
 
+"""
 # to get one sample in the beginning to see what the model is working with after the transformation is applied 
 img, label = dataset[0]  # Get one sample
 plt.imshow(img.permute(1, 2, 0).numpy())  # Convert (C, H, W) to (H, W, C) for visualization
 #plt.title(f"Class: {label}")
 plt.show()              # this is to see how the image processing was done before feeding it into the network 
                         # based on this, tune the transformation 
-
+"""
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
