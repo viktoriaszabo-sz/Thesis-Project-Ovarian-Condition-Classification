@@ -26,14 +26,11 @@ img_path = '.\simple_cyst.jpg'
 img = Image.open(img_path).convert("RGB")   #do i need RGB? 
 img_tensor = transform(img).unsqueeze(0).to(device)   
 
-print("test image nim/max: ", img_tensor.min(), img_tensor.max()) 
-
 with torch.no_grad():
     pred = ensemble(img_tensor)
     probabilities = torch.nn.functional.softmax(pred, dim=1)  # debug - Converts logits to probabilities
     pred_label = torch.argmax(probabilities, dim=1) #debug
     predicted_class = list(dataset.class_mapping.keys())[list(dataset.class_mapping.values()).index(pred_label.item())]
-    print(f"Predicted label index: {pred_label.item()}, ({predicted_class})")  #debug
 
 plt.figure()    # plot the image in the end
 plt.title(f"Predicted Label: {predicted_class}")
