@@ -25,7 +25,6 @@ sys.path.append(str(project))
 data_folder = project / 'data' / '_filtered_ovary_diseases' / 'images'
 csv_file = project / 'data' / '_filtered_ovary_diseases' / '_annotations.csv'
 
-print(str(data_folder))
 #print("Data folder:", data_folder)
 #print("CSV file:", csv_file)
 #data_folder = '.\project\data\_filtered_ovary_diseases\images'

@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 from torchvision.models import resnet50, mobilenet_v2, googlenet
@@ -60,11 +61,15 @@ def evaluate_model(model, dataloader, device):
     return acc
 
 accs = []
+start_time = time.time()
 for i in models:
     acc = evaluate_model(i, test_loader, device)
     accs.append(acc)
     print(f"Model accuracy: {acc:.4f}")
-
+end_time = time.time()
+total_time = end_time - start_time
+print(f"\Ensembling completed in {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
+    
 weights = np.array(accs)
 weights = weights / weights.sum()  # ensures sum(weights) == 1
 weights = weights.tolist()
