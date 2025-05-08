@@ -25,7 +25,7 @@ step_size = 30 #image_num / batch size
 #hyperparameters
 batch_size = 32     #maybe 64?
 lr = 0.01055
-epochs = 20 
+epochs = 20
 dropout = 0.3361 #not in resnet by default but helps with normalization 
 
 #-----------------------------------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ def obj_function(dropout, lr, epochs, batch_size):
     acc = 100.0 * n_correct / n_samples                 #accuracy score = correct prediciton / all samples 
     #confidence score here?
     print(acc)
-    torch.save(model.state_dict(), '.\models\mobilenet_model.pth')
+    torch.save(model.state_dict(), '.\models\_resnet50_model.pth')
     return acc 
 
 pbounds = {'dropout': (0.2, 0.499), 

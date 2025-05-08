@@ -2,7 +2,9 @@
 - create some data visualization 
 REMEMBER: to run it in the project folder 
 ----------------------------------------------------------------------------------------------------------"""
+from sklearn.metrics import confusion_matrix
 import torch
+import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision.models import mobilenet_v2
@@ -14,16 +16,15 @@ project = Path(__file__).parent  # Adjust based on your actual structure
 sys.path.append(str(project))
 
 from models.mobilenet import mobilenet_v2 #change according to name
-from utils.dataloading import dataset, transform, test_dataset, device
+from utils.dataloading import dataset, transform, device, num_class, label, labels
 
 model = mobilenet_v2(num_classes=6) # change according to name
 model.load_state_dict(torch.load('.\models\mobilenet_model.pth', map_location='cpu', weights_only=True))
-                                            #change according to model name
 model.eval()
 #---------------------------------------------------------------------------
-#input testing image
-img_path = '.\data\_filtered_ovary_diseases\simple_cyst.jpg'
 
+#input testing image
+img_path = '.\simple_cyst.jpg'
 #here would come an actual implementation of a UI 
 
 #-----------------------------------------------------------------------------------------------------------
@@ -55,3 +56,38 @@ plt.xticks([])
 plt.yticks([])
 plt.savefig(f".\prediction_of_image.png", dpi=300)
 #plt.show()
+
+
+
+
+
+"""
+# function to plot confusion matrix
+import itertools
+
+def plot_confusion_matrix(actual, predicted):
+
+    cm = confusion_matrix(actual, predicted)
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    plt.figure(figsize=(7,7))
+    cmap=plt.cm.Blues
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title('Confusion matrix', fontsize=25)
+  
+    tick_marks = np.arange(len(num_class))
+    plt.xticks(tick_marks, num_class, rotation=90, fontsize=15)
+    plt.yticks(tick_marks, num_class, fontsize=15)
+
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], '.2f'),
+        horizontalalignment="center",
+        color="white" if cm[i, j] > thresh else "black", fontsize = 14)
+
+    plt.ylabel('True label', fontsize=20)
+    plt.xlabel('Predicted label', fontsize=20)
+    plt.show()
+# plot confusion matrix
+plot_confusion_matrix(label, predicted_class)
+"""
