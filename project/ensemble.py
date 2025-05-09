@@ -1,6 +1,7 @@
 import time
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision.models import resnet50, mobilenet_v2, googlenet
 import sys
 from pathlib import Path
@@ -26,6 +27,69 @@ mobile.eval()
 google.eval()
 models = [resnet, mobile, google]
 
+class WeightedAverage(nn.Module):
+    def __init__(self, num_inputs):
+        super(WeightedAverage, self).__init__()
+        self.models = nn.ModuleList(models)
+        self.weights = nn.Parameter(torch.ones(len(models)))  # Learnable weights
+
+    def forward(self, x):
+        outputs = [model(x) for model in self.models]
+        outputs = torch.stack(outputs, dim=-1)  # [batch_size, num_classes, num_models]
+        normalized_weights = F.softmax(self.weights, dim=-1)
+
+        weighted_avg = (normalized_weights * outputs).sum(dim=-1)
+        #print(weighted_avg)
+        return weighted_avg
+    
+def evaluate_model(model, dataloader, device):
+    model.eval()
+    correct, total = 0, 0
+    with torch.no_grad():
+        for images, labels in dataloader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, preds = torch.max(outputs, 1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+            acc = correct / total
+    return acc
+
+accs = []
+start_time = time.time()
+for i in models:
+    acc = evaluate_model(i, test_loader, device)
+    accs.append(acc)
+    print(f"Model accuracy: {acc:.4f}")
+end_time = time.time()
+total_time = end_time - start_time
+print(f"Ensembling completed in {total_time:.2f} seconds ({total_time/60:.2f} minutes)")
+    
+#weights = np.array(accs)
+#weights = weights / weights.sum()  # ensures sum(weights) == 1
+#weights = weights.tolist()
+
+ensemble = WeightedAverage(models).to(device)
+ensemble_acc = evaluate_model(ensemble, test_loader, device)
+print(f"Ensemble model accuracy: {ensemble_acc:.4f}")
+
+ensemble.eval()
+ensemble.to(device)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 class EnsembleModel(nn.Module): #------------------------WEIGHTED AVERAGE 
     def __init__(self, models, weights=None):
         super().__init__()
@@ -80,3 +144,4 @@ print(f"Ensemble model accuracy: {ensemble_acc:.4f}")
 
 ensemble.eval()
 ensemble.to(device)
+"""
