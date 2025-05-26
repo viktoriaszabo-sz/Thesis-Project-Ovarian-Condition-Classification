@@ -2,7 +2,14 @@
 
 This repository is for the project , on which I've written my bachelor's thesis, "Convolutional Neural Network for Medical Image Classification"
 
-In the project, I used openly accessible datasets from RoboFlow. These two datasets consist ultrasound images of various types of ovarian cancers, PCOS, and other benign conditions.
+
+In the project, I used openly accessible datasets from RoboFlow:
+
+https://universe.roboflow.com/elif-5vzyt/ova_canc - for ovarian tumours with various malignancy 
+
+https://universe.roboflow.com/vanessas/pcos-image-classification - for PCOS specific images, including clean cases (no abnormalities found) 
+
+
 The project aims to create a multi-model programme, which is capable of classifying the tumours, and assigning the correct labels to them. Since the datasets consists cases with various malignancies, it was important to choose the right models for the highest accuracy possible, while keeping down the computaitonal cost. With this adjustment, the solution is implementable into low computer resource enviroments, or embedded software solutions. 
 
 The project relies on transfer learning, upon pre-trianed PyTorch models, where only the final layers were retrained on the current dataset. With this, the computational cost rewquired during training was kept to the minimum. 
