@@ -1,4 +1,4 @@
-# Medical Image Classification 
+# Medical Image Classification of Various Ovarian Conditions
 
 This repository is for the project , on which I've written my bachelor's thesis, "Convolutional Neural Network for Medical Image Classification"
 
