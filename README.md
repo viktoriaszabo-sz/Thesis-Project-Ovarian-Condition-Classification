@@ -9,8 +9,7 @@ The project relies on transfer learning, upon pre-trianed PyTorch models, where 
 The three models were ensembled in an additional neural network upon weighted average, where each model contributed differently, depending on their accuracy scores and types of errors made during the training and testing. 
 Hyperparamteres were optimized using the Bayesian optimization method, which is commented out in order to not overload the hardware during the testing period. 
 
-The project filed are divided for the best outlook and debugging purposes. The project is highly adaptable and scaleable. 
+The project filed are divided for the best outlook and debugging purposes. The project is highly adaptable and scaleable. The final ensembled model is capable of recognizing the ovarian condition on the input image. 
 
 Future works include experimenting with more models and higher accuracy. Implementation of different Computer Vision exercises, such as segmentation will be considered. 
 
-The final ensembled model is capable of recognizing the ovarian condition on the input image. 
